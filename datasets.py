@@ -28,3 +28,18 @@ usps_te = torch.utils.data.DataLoader(USPS('../data', train=False, download=True
                     transforms.ToTensor(),
                     transforms.Normalize((0.5,), (0.5,))
                 ])),batch_size=64, shuffle=True)
+
+svhn_tr = torch.utils.data.DataLoader(datasets.SVHN('data/SVHN/', split="train", download=True,
+                transform=transforms.Compose([
+                    transforms.Grayscale(),
+                    transforms.ToTensor(),
+                    transforms.Normalize((0.5,), (0.5,)),
+                ])), batch_size=100, shuffle=True)
+
+svhn_te = torch.utils.data.DataLoader(datasets.SVHN('data/SVHN/', split="train", download=True,
+                transform=transforms.Compose([
+                    transforms.Grayscale(),
+                    transforms.ToTensor(),
+                    transforms.Normalize((0.5,), (0.5,)),
+                ])), batch_size=100, shuffle=True)
+
