@@ -1,4 +1,3 @@
-import numpy as np
 import sys
 import os
 sys.path.append(os.path.dirname(os.getcwd()))
@@ -7,14 +6,14 @@ from model import *
 from test import *
 
 import torch
-import torch.nn as nn
-import torch.nn.functional as F
+import numpy as np
 import torch.optim as optim
+import torch.nn.functional as F
 from torch.autograd import Variable
 
 losses = {
     "c": 1.0,
-    "z": 10.0,
+    "z": 0.0,
     "idx": 0.0,
     "idy": 0.0,
     "tr": 0.0,
@@ -38,15 +37,17 @@ def train(encoder, decoder, class_classifier, domain_classifier,
     c_optimizer = optim.Adam(list(encoder.parameters()) + list(class_classifier.parameters()), lr=1e-4, betas=(0.5,0.9))
     # z
     g_optimizer = optim.Adam(encoder.parameters(), lr=1e-4, betas=(0.5,0.9))
-
     z_optimizer = optim.Adam(encoder.parameters(), lr=1e-4, betas=(0.5,0.9))
     zd_optimizer = optim.Adam(class_classifier.parameters(), lr=1e-4, betas=(0.5,0.9))
 
     id_optimizer = optim.Adam(list(encoder.parameters())+list(decoder.parameters()), lr=1e-4, betas=(0.5,0.9))
+
     for i in range(epochs):
 
-        data_zip = zip(target_train_loader, source_train_loader)
-        for batch_idx, ((data_t, _), (data_s, target_s)) in enumerate(data_zip):
+        data_zip = zip(source_train_loader, target_train_loader)
+        for batch_idx, ((data_s, target_s), (data_t, _)) in enumerate(data_zip):
+            if(use_cuda):
+                data_s, target_s, data_t = data_s.cuda(), target_s.cuda(), data_t.cuda()
 
             if(losses['c'] or losses['z'] or losses['idx']):
                 source_encoding = encoder(data_s)
@@ -133,13 +134,15 @@ def train(encoder, decoder, class_classifier, domain_classifier,
             #loss.backward()
             #optimizer.step()
 
-        if(i%5==0):
+        if(i%1==0):
             test(encoder, class_classifier, source_test_loader, True, i)
             test(encoder, class_classifier, target_test_loader, False, i)
 
     return encoder, decoder, class_classifier, domain_classifier
 
 if __name__ == '__main__':
+    use_cuda = torch.cuda.is_available()
+
     encoder = Encoder()
     decoder = Decoder()
 
@@ -149,6 +152,15 @@ if __name__ == '__main__':
     source_discriminator = Discriminator()
     target_discriminator = Discriminator()
 
+    if use_cuda:
+        encoder = encoder.cuda()
+        decoder = decoder.cuda()
+
+        class_classifier = class_classifier.cuda()
+        domain_classifier = domain_classifier.cuda()
+
+        source_discriminator = source_discriminator.cuda()
+        target_discriminator = target_discriminator.cuda()
     # dataset tasks
     mnist2usps = (mnist_tr, usps_tr, mnist_te, usps_te)
     usps2mnist = (usps_tr, mnist_tr, usps_te, mnist_te)
