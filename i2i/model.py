@@ -1,6 +1,9 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from torchvision.datasets import MNIST
+from usps import USPS
+from torchvision import datasets, transforms
 
 hidden_dims = 500
 encoding_size = 120
@@ -27,15 +30,15 @@ class Decoder(nn.Module):
     def __init__(self):
         super(Decoder, self).__init__()
 
-        self.conv1 = nn.ConvTranspose2d(50, 20, 9, 1)
+        self.conv1 = nn.ConvTranspose2d(120, 50, 3, stride=3)
 
         # source
-        self.conv2s = nn.ConvTranspose2d(20, 10, 9, 1)
-        self.conv3s = nn.ConvTranspose2d(10, 1, 9, 1)
+        self.conv2s = nn.ConvTranspose2d(50, 20, 7, stride=3, padding=1)
+        self.conv3s = nn.ConvTranspose2d(20, 1, 4, stride=3, padding=1)
 
         # target
-        self.conv2t = nn.ConvTranspose2d(20, 10, 9, 1)
-        self.conv3t = nn.ConvTranspose2d(10, 1, 9, 1)
+        self.conv2t = nn.ConvTranspose2d(50, 20, 7, stride=3, padding=1)
+        self.conv3t = nn.ConvTranspose2d(20, 1, 4, stride=3, padding=1)
 
     def forward(self, x, source):
         x = F.relu(self.conv1(x))
